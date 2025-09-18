@@ -3,7 +3,8 @@ name: Build Ilm Minar App
 on:
   push:
     branches:
-      - master
+      - main
+  workflow_dispatch:   # یہ لائن نئی ہے، اس سے آپ Actions کو manually بھی چلا سکیں گے
 
 jobs:
   build:
