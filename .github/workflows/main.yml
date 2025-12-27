@@ -10,21 +10,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
-    # یہ حصہ GitHub کو بتائے گا کہ تمام کام اس فولڈر کے اندر کرو
-    defaults:
-      run:
-        working-directory: ./ilm-minar-app-v1.4-full-2
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          path: '.' # یہ فائلوں کو مین ڈائریکٹری میں لانے کی کوشش کرے گا
-
-      - name: List files (For Debugging)
-        run: ls -R .. # یہ ہمیں دکھائے گا کہ فائلیں اصل میں کہاں ہیں
-        working-directory: .
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -32,10 +21,13 @@ jobs:
           flutter-version: '3.22.0'
 
       - name: Get dependencies
-        run: flutter pub get
+        run: |
+          cd ilm-minar-app-v1.4-full-2 || cd .
+          flutter pub get
 
       - name: Setup Bitrise Build Cache
         run: |
+          cd ilm-minar-app-v1.4-full-2 || cd .
           curl --retry 5 -sSfL 'https://raw.githubusercontent.com/bitrise-io/bitrise-build-cache-cli/main/install/installer.sh' | sh -s -- -b /tmp/bin -d
           /tmp/bin/bitrise-build-cache activate gradle --cache --cache-push
         env:
@@ -43,10 +35,12 @@ jobs:
           BITRISE_BUILD_CACHE_AUTH_TOKEN: ${{ secrets.BITRISE_BUILD_CACHE_AUTH_TOKEN }}
 
       - name: Build release APK
-        run: flutter build apk --release
+        run: |
+          cd ilm-minar-app-v1.4-full-2 || cd .
+          flutter build apk --release
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
-          path: ilm-minar-app-v1.4-full-2/build/app/outputs/flutter-apk/app-release.apk
+          path: "**/build/app/outputs/flutter-apk/app-release.apk"
