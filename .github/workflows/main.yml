@@ -1,32 +1,39 @@
-name: Build Ilm Minar App
+name: Build Flutter APK
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:   # یہ لائن نئی ہے، اس سے آپ Actions کو manually بھی چلا سکیں گے
+    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
-          node-version: 18
+          flutter-version: '3.22.0'
 
-      - name: Install Dependencies
-        run: npm install
+      - name: Get dependencies
+        run: flutter pub get
 
-      - name: Build Project
-        run: npm run build
+      # Bitrise والا حصہ یہاں شامل کریں
+      - name: Setup Bitrise Build Cache
+        run: |
+          curl --retry 5 -sSfL 'https://raw.githubusercontent.com/bitrise-io/bitrise-build-cache-cli/main/install/installer.sh' | sh -s -- -b /tmp/bin -d
+          /tmp/bin/bitrise-build-cache activate gradle --cache --cache-push
+        env:
+          BITRISE_BUILD_CACHE_WORKSPACE_ID: ${{ secrets.BITRISE_BUILD_CACHE_WORKSPACE_ID }}
+          BITRISE_BUILD_CACHE_AUTH_TOKEN: ${{ secrets.BITRISE_BUILD_CACHE_AUTH_TOKEN }}
 
-      - name: Upload Production Build
+      - name: Build release APK
+        run: flutter build apk --release
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
-          path: dist
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
